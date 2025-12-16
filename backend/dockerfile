@@ -1,0 +1,36 @@
+# Stage 1: Build the application
+FROM node:18-alpine AS builder
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files to install dependencies
+COPY package*.json ./
+
+# Install dependencies (use ci for deterministic builds)
+RUN npm ci
+
+# Copy the rest of the application code
+COPY . .
+
+# Build the application (if using TypeScript or a build step)
+# RUN npm run build
+
+# Stage 2: Run the application
+FROM node:18-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Copy built artifacts and node_modules from the builder stage
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app .
+
+# Expose the port the app runs on (adjust if necessary, e.g., 3000, 8080)
+EXPOSE 3000
+
+# Define environment variable for production
+ENV NODE_ENV=production
+
+# Start the application
+CMD ["npm", "start"]

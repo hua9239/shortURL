@@ -1,0 +1,30 @@
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: shorturl-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: p@ssword
+      MYSQL_DATABASE: shorturl_db
+    ports:
+      - "3306:3306"
+
+  express:
+    build: ./backend
+    container_name: shorturl-express
+    environment:
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: p@ssword
+      DB_NAME: shorturl_db
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mysql
+
+  vue-app:
+    build: ./frontend
+    container_name: shorturl-vue
+    ports:
+      - "80:80"
+    depends_on:
+      - express

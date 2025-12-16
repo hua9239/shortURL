@@ -1,0 +1,18 @@
+- [x] docker mysql (3306:3306)
+- [x] docker express (3000:3000)
+- [x] docker vue app (80:80)
+- [ ] [backend] express router & api
+
+- [ ] /api/v1/create (GET)
+    - [x] route
+    - [ ] get variables from payload
+    - [ ] attach to mysql
+    - [ ] register short URL
+
+- [ ] /api/v1/******** (GET)
+    - [x] route redirect
+    - [ ] get short URL from params
+    - [ ] query mysql for original URL
+    - [ ] redirect to original URL
+    
+- [ ] [frontend] minimal landing page with a form to create short URL
