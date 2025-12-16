@@ -19,7 +19,7 @@
 
 | Service     | Docker Image        | Port Mapping  |
 |:------------|:--------------------|:--------------|
-| Database    | mysql:5.7           | Internal Only |
+| Database    | mysql:5.7           | Internal Only *temporary exposure for development* |
 | Backend API | custom-node-express | 3000:3000     |
 | Frontend    | custom-vue-app      | 80:80         |
 
@@ -65,6 +65,25 @@
 | `/api/v1/delete` | `GET`  | Delete short URL   | `true`         |
 
 ***anyway just use GET method***
+
+-----
+
+### 資料表
+
+| Column Name      | Data Type     | Attributes                | Description         |
+|:-----------------|:--------------|:--------------------------|:--------------------|
+| `id`             | INT           | PK, AI, NOT NULL          | Unique identifier   |
+| `short_url_code` | VARCHAR(10)   | UNIQUE, NOT NULL          | The short code      |
+| `full_url`       | VARCHAR(2048) | NOT NULL                  | The original URL    |
+| `created_at`     | DATETIME      | DEFAULT CURRENT_TIMESTAMP | Creation time       |
+
+Example Data:
+
+| id | short_url_code | full_url                   | created_at          |
+|----|----------------|----------------------------|---------------------|
+| 1  | abc123         | `https://www.example.com/` | 2024-01-01 12:00:00 |
+| 2  | xyz789         | `https://www.google.com/`  | 2024-01-02 13:30:00 |
+
 
 -----
 
