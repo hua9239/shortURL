@@ -7,23 +7,18 @@ router.get(/^\/([A-Za-z0-9]+)$/, async (req, res, next) => {
     console.log(`Processing redirect for code: ${code}`);
 
     if (code.length > 10) {
-        return res.status(400).send('Invalid short URL code');
-        // return res.redirect('/');
+        // return res.status(400).send('Invalid short URL code');
+        return res.redirect('/');
     }
 
     try {
-        // simulated database dead
-        if (code === 'dberror') {
-            throw new Error('Simulated database error');
-        }
-
-        const [rows] = await db.query('SELECT full_url FROM urls WHERE short_url_code = ?', [code]);
+        const [rows] = await db.query('SELECT fullUrl FROM urls USE INDEX (idx_shortCode) WHERE shortCode = ?', [code]);
 
         if (rows.length > 0) {
-            return res.redirect(rows[0].full_url);
+            return res.redirect(rows[0].fullUrl);
         } else {
-            return res.status(404).send('Short URL not found');
-            // return res.redirect('/');
+            // return res.status(404).send('Short URL not found');
+            return res.redirect('/');
         }
     } catch (error) {
         console.error('Database error:', error);

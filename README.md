@@ -17,13 +17,15 @@
 
 ### 1.2 Docker 服務部署
 
-| Service     | Docker Image        | Port Mapping  |
-|:------------|:--------------------|:--------------|
-| Database    | mysql:5.7           | Internal Only *temporary exposure for development* |
-| Backend API | custom-node-express | 3000:3000     |
-| Frontend    | custom-vue-app      | 80:80         |
+| Service       | Docker Image        | Port Mapping   |
+|:--------------|:--------------------|:---------------|
+| Database      | mysql:5.7           | Internal:3306  |
+| Backend API   | custom-node-express | Internal:3000  |
+| Frontend      | custom-vue-app      | Internal:80    |
+| Reverse Proxy | nginx:latest        | 443:443, 80:80 |
 
-備註: nginx 服務將直接在host上運行，以便於進行反向代理和 SSL 終端管理，不使用容器化部署。
+https -> nignx(host) -> nginx(container) -> [ express(container) | vue(container) ] \
+使用兩層 nginx 作為反向代理，第一層處理 SSL/TLS 終端，第二層負責內部流量轉發至後端服務。
 
 -----
 
@@ -36,7 +38,7 @@
 | Path                      | Description           |
 |:--------------------------|:----------------------|
 | `s.domain.com/`           | Landing Page          |
-| `s.domain.com/****`       | Short URL Redirection |
+| `s.domain.com/*****`      | Short URL Redirection |
 | `s.domain.com/login`      | Dashboard Login Page  |
 | `s.domain.com/manage`     | Dashboard Page        |
 | `s.domain.com/api/v1/...` | API Endpoints         |
@@ -73,13 +75,13 @@ can't use payload in GET method
 | Column Name      | Data Type     | Attributes                | Description         |
 |:-----------------|:--------------|:--------------------------|:--------------------|
 | `id`             | INT           | PK, AI, NOT NULL          | Unique identifier   |
-| `short_url_code` | VARCHAR(10)   | UNIQUE, NOT NULL          | The short code      |
-| `full_url`       | VARCHAR(2048) | NOT NULL                  | The original URL    |
-| `created_at`     | DATETIME      | DEFAULT CURRENT_TIMESTAMP | Creation time       |
+| `shortCode`      | VARCHAR(10)   | UNIQUE, NOT NULL, INDEX   | The short code      |
+| `fullUrl`        | VARCHAR(2048) | NOT NULL                  | The original URL    |
+| `createdAt`      | DATETIME      | DEFAULT CURRENT_TIMESTAMP | Creation time       |
 
 Example Data:
 
-| id | short_url_code | full_url                   | created_at          |
+| id | shortCode      | fullUrl                    | createdAt           |
 |----|----------------|----------------------------|---------------------|
 | 1  | abc123         | `https://www.example.com/` | 2024-01-01 12:00:00 |
 | 2  | xyz789         | `https://www.google.com/`  | 2024-01-02 13:30:00 |
@@ -91,7 +93,7 @@ Example Data:
 
 | Router     | Responsibility (Traffic/Logic)              | Example Path Handled      | Action                                                                                                 |
 |:----------:|:--------------------------------------------|:--------------------------|:-------------------------------------------------------------------------------------------------------|
-| Nginx      | Reverse Proxy / Traffic Steering            | `s.domain.com/****`       | Forwards the request to Express to handle the **Redirection** logic.                                   |
+| Nginx      | Reverse Proxy / Traffic Steering            | `s.domain.com/*****`      | Forwards the request to Express to handle the **Redirection** logic.                                   |
 |            |                                             | `s.domain.com/api/v1/...` | Forwards the request to Express to handle **API Services**.                                            |
 |            |                                             | `s.domain.com/login`      | Forwards the request to the Frontend Container, to be handled by Vue Router.                           |
 | Express    | Backend Business Routing / API Services     | `POST /api/v1/create`     | Processes the short URL creation request, **writes to MySQL**, and returns the short code.             |
@@ -103,7 +105,7 @@ Example Data:
 <!--
 | Router     | 職責 (Traffic/Logic)     | 處理的 Path 範例           | 動作 (Action)                                                     |
 |:-----------|:-------------------------|:--------------------------|:-----------------------------------------------------------------|
-| Nginx      | **反向代理/流量導向**     | `s.domain.com/****`       | 將請求導向 Express 處理 **重定向** 邏輯。                           |
+| Nginx      | **反向代理/流量導向**     | `s.domain.com/*****`      | 將請求導向 Express 處理 **重定向** 邏輯。                           |
 |            |                          | `s.domain.com/api/v1/...` | 將請求導向 Express 處理 **API 服務**。                             |
 |            |                          | `s.domain.com/login`      | 將請求導向 Frontend Container, 由 Vue Router 接管。                |
 | Express    | **後端業務路由/API 服務** | `POST /api/v1/create`     | 處理短網址建立請求，**寫入 MySQL**，回傳短碼。                       |
