@@ -1,4 +1,5 @@
 const express = require('express');
+const { body, validationResult } = require('express-validator');
 
 const router = express.Router();
 
@@ -12,9 +13,27 @@ const authenticate = (req, res, next) => {
 };
 
 
-router.get('/v1/create', (req, res) => {
-    console.log(new Date().toISOString(), 'GET /v1/create called');
-    res.json({ message: 'create endpoint triggered' });
+router.post('/v1/create', [
+    // isURL -> valid URL so len must > 0
+    // isLength -> max length
+    body('fullUrl').isURL().isLength({ max: 2048 }),
+
+    // optional({values: 'falsy'}) -> can be "", null, undefined
+    // isAlphanumeric -> [A-Za-z0-9]
+    // isLength -> lan <= 10
+    body('customCode').optional({ values: 'falsy' }).isAlphanumeric().isLength({ max: 10 })
+], (req, res) => {
+
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ message: 'Validation failed', errors: errors.array() });
+    }
+
+    const { fullUrl, customCode } = req.body || {};
+    console.log(new Date().toISOString(), 'POST /v1/create called with:', { fullUrl, customCode });
+
+    res.json({ message: 'success', data: { fullUrl, customCode } });
 });
 
 router.get('/v1/login', (req, res) => {
@@ -30,6 +49,13 @@ router.get('/v1/urls', authenticate, (_req, res) => {
 router.get('/v1/delete', authenticate, (req, res) => {
     console.log(new Date().toISOString(), 'GET /v1/delete called');
     res.json({ message: 'delete endpoint triggered' });
+});
+
+router.all(/.*/, (req, res) => {
+    res.status(404).json({
+        message: `Cannot ${req.method} ${req.originalUrl}`,
+        hint: 'what are you looking for?'
+    });
 });
 
 module.exports = router;

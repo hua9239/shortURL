@@ -57,14 +57,14 @@
 
 ### 3.1 API 端點定義
 
-| Endpoint         | Method | Description        | Authentication |
-|:-----------------|:------:|:-------------------|:---------------|
-| `/api/v1/create` | `GET`  | Create short URL   | `false`        |
-| `/api/v1/login`  | `GET`  | management login   | `false`        |
-| `/api/v1/urls`   | `GET`  | Get all short URLs | `true`         |
-| `/api/v1/delete` | `GET`  | Delete short URL   | `true`         |
+| Endpoint         | Method  | Description        | Authentication |
+|:-----------------|:-------:|:-------------------|:---------------|
+| `/api/v1/create` | `POST`  | Create short URL   | `false`        |
+| `/api/v1/login`  | `POST`  | management login   | `false`        |
+| `/api/v1/urls`   | `GET`   | Get all short URLs | `true`         |
+| `/api/v1/delete` | `POST`  | Delete short URL   | `true`         |
 
-***anyway just use GET method***
+can't use payload in GET method
 
 -----
 
