@@ -1,6 +1,7 @@
 const express = require("express");
 const apiRouter = require("./routes/api");
 const redirectRouter = require("./routes/redirect");
+const { errorResponse } = require('./utils/responseHandler');
 const app = express();
 const port = 3000;
 
@@ -9,7 +10,7 @@ app.use("/api", apiRouter);
 app.use("/", redirectRouter);
 
 app.use("/api", (req, res) => {
-    res.status(404).json({ message: 'API endpoint not found' });
+    errorResponse(res, 'API endpoint not found', 404);
 });
 
 app.use((req, res) => {
@@ -21,7 +22,7 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
     console.error(err.stack);
     if (req.path.startsWith('/api')) {
-        return res.status(500).json({ message: 'Internal Server Error' });
+        return errorResponse(res, 'Internal Server Error', 500);
     }
     res.status(500).send('Something broke!');
 });

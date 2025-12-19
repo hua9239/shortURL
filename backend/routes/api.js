@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require("../db");
 const { body, validationResult } = require('express-validator');
+const { successResponse, errorResponse } = require('../utils/responseHandler');
 
 const router = express.Router();
 
@@ -9,7 +10,7 @@ const authenticate = (req, res, next) => {
     if (auth) {
         next();
     } else {
-        res.status(401).json({ message: 'Unauthorized' });
+        errorResponse(res, 'Unauthorized', 401);
     }
 };
 
@@ -20,7 +21,7 @@ router.post('/v1/create', [
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return res.status(400).json({ message: 'Validation failed', errors: errors.array() });
+        return errorResponse(res, 'Validation failed', 400, errors.array());
     }
 
     const blockList = ['api', 'login'];
@@ -36,21 +37,21 @@ router.post('/v1/create', [
         const urlObj = new URL(fullUrl);
         const blockedDomains = ['127.0.0.1', 'localhost', 'domain.com']; // FIXME: add your own domain
         if (blockedDomains.includes(urlObj.hostname)) {
-            return res.status(400).json({ message: 'Self-redirection is not allowed' });
+            return errorResponse(res, 'Self-redirection is not allowed', 400);
         }
     } catch (error) {
-        return res.status(400).json({ message: 'Invalid URL' });
+        return errorResponse(res, 'Invalid URL', 400);
     }
 
     if (shortCode && isBlocked(shortCode)) {
-        return res.status(400).json({ message: 'Custom code is not allowed' });
+        return errorResponse(res, 'Custom code is not allowed', 400);
     }
 
     try {
         if (shortCode) {
             const [rows] = await db.query('SELECT id FROM urls WHERE shortCode = ?', [shortCode]);
             if (rows.length > 0) {
-                return res.status(400).json({ message: 'Custom code already exists' });
+                return errorResponse(res, 'Custom code already exists', 400);
             }
         } else {
             const generateCode = () => {
@@ -81,43 +82,43 @@ router.post('/v1/create', [
             }
 
             if (!isAvailable) {
-                return res.status(500).json({ message: 'Failed to generate unique code, please try again' });
+                return errorResponse(res, 'Failed to generate unique code, please try again', 500);
             }
         }
 
         await db.query('INSERT INTO urls (shortCode, fullUrl) VALUES (?, ?)', [shortCode, fullUrl]);
 
-        res.json({ message: 'success', data: { fullUrl, shortCode } });
+        successResponse(res, { fullUrl, shortCode }, 'Short URL created successfully');
     } catch (error) {
         console.error('Database error:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        errorResponse(res, 'Internal server error', 500);
     }
 });
 
 router.get('/v1/urls', authenticate, async (_req, res) => {
     try {
         const [rows] = await db.query('SELECT * FROM urls ORDER BY id ASC');
-        res.json({ message: 'success', data: rows });
+        successResponse(res, rows);
     } catch (error) {
         console.error('Database error:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        errorResponse(res, 'Internal server error', 500);
     }
 });
 
 router.post('/v1/delete', authenticate, async (req, res) => {
     const { shortCode } = req.body;
     if (!shortCode) {
-        return res.status(400).json({ message: 'shortCode is required' });
+        return errorResponse(res, 'shortCode is required', 400);
     }
     try {
         const [result] = await db.query('DELETE FROM urls WHERE shortCode = ?', [shortCode]);
         if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'shortCode not found' });
+            return errorResponse(res, 'shortCode not found', 404);
         }
-        res.json({ message: 'success' });
+        successResponse(res, null, 'Deleted successfully');
     } catch (error) {
         console.error('Database error:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        errorResponse(res, 'Internal server error', 500);
     }
 });
 
@@ -126,10 +127,7 @@ router.post('/v1/delete', authenticate, async (req, res) => {
 // });
 
 router.all(/.*/, (req, res) => {
-    res.status(404).json({
-        message: `Cannot ${req.method} ${req.originalUrl}`,
-        hint: 'what are you looking for?'
-    });
+    errorResponse(res, `Cannot ${req.method} ${req.originalUrl}`, 404, { hint: 'what are you looking for?' });
 });
 
 module.exports = router;

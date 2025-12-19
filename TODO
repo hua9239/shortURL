@@ -1,16 +1,17 @@
-- 前端 landing page (主頁面)
-- 前端 dashboard (管理介面)
-- 完整 API 功能
+- [=] 前端 landing page (主頁面)
+- [*] 整合 後端回傳格式
+- [ ] 前端 dashboard (管理介面)
+- [ ] 完整 API 功能
 
-- 後端 管理者登入 邏輯
-- 加入 JWT 驗證機制
-- 前端 login page (登入頁面)
-- 實裝 登入驗證
+- [ ] 後端 管理者登入 邏輯
+- [ ] 加入 JWT 驗證機制
+- [ ] 前端 login page (登入頁面)
+- [ ] 實裝 登入驗證
 
-- 重構 後端架構
-- 優化 隨機碼生成機制，可用base62或是snowflake等演算法
-- 優化 加入 Pre-generated Keys 機制
-- 安全性強化 rate limit
+- [ ] 重構 後端架構
+- [ ] 優化 隨機碼生成機制，可用base62或是snowflake等演算法
+- [ ] 優化 加入 Pre-generated Keys 機制
+- [ ] 安全性強化 rate limit
 
 ----
 
