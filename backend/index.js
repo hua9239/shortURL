@@ -2,8 +2,9 @@ const express = require("express");
 const apiRouter = require("./routes/api");
 const redirectRouter = require("./routes/redirect");
 const { errorResponse } = require('./utils/responseHandler');
+const config = require('./config/config');
 const app = express();
-const port = 3000;
+const port = config.port;
 
 app.use(express.json());
 app.use("/api", apiRouter);
