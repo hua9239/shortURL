@@ -89,7 +89,7 @@ exports.getUrls = async (_req, res) => {
 };
 
 exports.deleteUrl = async (req, res) => {
-    const { shortCode } = req.body;
+    const shortCode = req.params.shortCode || req.body.shortCode;
     if (!shortCode) {
         return errorResponse(res, 'shortCode is required', 400);
     }

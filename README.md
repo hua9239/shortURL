@@ -59,14 +59,12 @@ https -> nignx(host) -> nginx(container) -> [ express(container) | vue(container
 
 ### 3.1 API 端點定義
 
-| Endpoint         | Method  | Description        | Authentication |
-|:-----------------|:-------:|:-------------------|:---------------|
-| `/api/v1/create` | `POST`  | Create short URL   | `false`        |
-| `/api/v1/login`  | `POST`  | management login   | `false`        |
-| `/api/v1/urls`   | `GET`   | Get all short URLs | `true`         |
-| `/api/v1/delete` | `POST`  | Delete short URL   | `true`         |
-
-can't use payload in GET method
+| Endpoint                      | Method   | Description        | Authentication |
+|:------------------------------|:--------:|:-------------------|:---------------|
+| `/api/v1/urls`                | `POST`   | Create short URL   | `false`        |
+| `/api/v1/login`               | `POST`   | management login   | `false`        |
+| `/api/v1/urls`                | `GET`    | Get all short URLs | `true`         |
+| `/api/v1/urls/:shortCode`     | `DELETE` | Delete short URL   | `true`         |
 
 -----
 
@@ -96,7 +94,7 @@ Example Data:
 | Nginx      | Reverse Proxy / Traffic Steering            | `s.domain.com/*****`      | Forwards the request to Express to handle the **Redirection** logic.                                   |
 |            |                                             | `s.domain.com/api/v1/...` | Forwards the request to Express to handle **API Services**.                                            |
 |            |                                             | `s.domain.com/login`      | Forwards the request to the Frontend Container, to be handled by Vue Router.                           |
-| Express    | Backend Business Routing / API Services     | `POST /api/v1/create`     | Processes the short URL creation request, **writes to MySQL**, and returns the short code.             |
+| Express    | Backend Business Routing / API Services     | `POST /api/v1/urls`       | Processes the short URL creation request, **writes to MySQL**, and returns the short code.             |
 |            |                                             | `GET /****`               | Queries MySQL for the full URL based on the short code, then issues an **HTTP 302 Redirect** response. |
 | Vue Router | Frontend Page Routing / Component Switching | `/manage`                 | Renders the `<DashboardPage>` component.                                                               |
 |            |                                             | `/login`                  | Renders the `<LoginPage>` component.                                                                   |

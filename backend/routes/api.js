@@ -6,17 +6,17 @@ const authenticate = require('../middleware/auth');
 
 const router = express.Router();
 
-router.post('/v1/create', [
+router.post('/v1/urls', [
     body('fullUrl').isURL().isLength({ max: 2048 }),
     body('shortCode').optional({ values: 'falsy' }).isAlphanumeric().isLength({ max: 10 })
 ], urlController.createUrl);
 
 router.get('/v1/urls', authenticate, urlController.getUrls);
 
-router.post('/v1/delete', authenticate, urlController.deleteUrl);
+router.delete('/v1/urls/:shortCode', authenticate, urlController.deleteUrl);
 
 router.all(/.*/, (req, res) => {
-    errorResponse(res, `Cannot ${req.method} ${req.originalUrl}`, 404, { hint: 'what are you looking for?' });
+    errorResponse(res, `Cannot ${req.method} ${req.originalUrl}`, 404);
 });
 
 module.exports = router;

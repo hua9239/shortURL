@@ -62,12 +62,11 @@ export default {
       if (!confirm(`Are you sure you want to delete ${shortCode}?`)) return;
       
       try {
-        const response = await fetch('/api/v1/delete', {
-          method: 'POST',
+        const response = await fetch(`/api/v1/urls/${shortCode}`, {
+          method: 'DELETE',
           headers: {
             'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ shortCode })
+          }
         });
         const data = await response.json();
         if (data.success) {

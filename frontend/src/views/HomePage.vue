@@ -50,7 +50,7 @@ const submitForm = async () => {
   error.value = null;
 
   try {
-    const response = await fetch('/api/v1/create', {
+    const response = await fetch('/api/v1/urls', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
