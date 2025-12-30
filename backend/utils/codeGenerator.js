@@ -1,0 +1,17 @@
+const config = require('../config/config');
+
+const generateCode = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < 6; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+};
+
+const isBlocked = (code) => config.blockedCodes.includes(code.toLowerCase());
+
+module.exports = {
+    generateCode,
+    isBlocked
+};

@@ -2,17 +2,7 @@ const db = require("../db");
 const { validationResult } = require('express-validator');
 const { successResponse, errorResponse } = require('../utils/responseHandler');
 const config = require('../config/config');
-
-const generateCode = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    for (let i = 0; i < 6; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-};
-
-const isBlocked = (code) => config.blockedCodes.includes(code.toLowerCase());
+const { generateCode, isBlocked } = require('../utils/codeGenerator');
 
 exports.createUrl = async (req, res) => {
     const errors = validationResult(req);
@@ -22,10 +12,12 @@ exports.createUrl = async (req, res) => {
 
     let { fullUrl, shortCode } = req.body || {};
 
+    // Normalize URL
     if (!/^https?:\/\//i.test(fullUrl)) {
         fullUrl = 'http://' + fullUrl;
     }
 
+    // Validate URL domain
     try {
         const urlObj = new URL(fullUrl);
         if (config.blockedDomains.includes(urlObj.hostname)) {
@@ -35,30 +27,35 @@ exports.createUrl = async (req, res) => {
         return errorResponse(res, 'Invalid URL', 400);
     }
 
+    // Validate custom shortCode
     if (shortCode && isBlocked(shortCode)) {
         return errorResponse(res, 'Custom code is not allowed', 400);
     }
 
     try {
         if (shortCode) {
+            // Check if custom code exists
             const [rows] = await db.query('SELECT id FROM urls WHERE shortCode = ?', [shortCode]);
             if (rows.length > 0) {
                 return errorResponse(res, 'Custom code already exists', 400);
             }
         } else {
+            // Generate unique code
             let isAvailable = false;
             let attempts = 0;
+            const maxAttempts = 5;
 
-            while (!isAvailable && attempts < 5) {
-                shortCode = generateCode();
+            while (!isAvailable && attempts < maxAttempts) {
+                const code = generateCode();
 
-                if (isBlocked(shortCode)) {
+                if (isBlocked(code)) {
                     attempts++;
                     continue;
                 }
 
-                const [rows] = await db.query('SELECT id FROM urls WHERE shortCode = ?', [shortCode]);
+                const [rows] = await db.query('SELECT id FROM urls WHERE shortCode = ?', [code]);
                 if (rows.length === 0) {
+                    shortCode = code;
                     isAvailable = true;
                 }
                 attempts++;
@@ -89,15 +86,19 @@ exports.getUrls = async (_req, res) => {
 };
 
 exports.deleteUrl = async (req, res) => {
-    const shortCode = req.params.shortCode || req.body.shortCode;
+    const { shortCode } = req.params;
+    
     if (!shortCode) {
         return errorResponse(res, 'shortCode is required', 400);
     }
+
     try {
         const [result] = await db.query('DELETE FROM urls WHERE shortCode = ?', [shortCode]);
+        
         if (result.affectedRows === 0) {
             return errorResponse(res, 'shortCode not found', 404);
         }
+        
         successResponse(res, null, 'Deleted successfully');
     } catch (error) {
         console.error('Database error:', error);

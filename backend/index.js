@@ -15,9 +15,8 @@ app.use("/api", (req, res) => {
 });
 
 app.use((req, res) => {
-    console.log(`Unmatched route: ${req.originalUrl}, redirecting to home.`);
-    // res.status(404).send('Page not found');
-    res.redirect('/');
+    console.log(`Unmatched route: ${req.originalUrl}`);
+    res.status(404).json({ success: false, message: 'Endpoint not found' });
 });
 
 app.use((err, req, res, next) => {
