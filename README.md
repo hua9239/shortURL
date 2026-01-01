@@ -1,114 +1,84 @@
-# 短網址服務架構
+# 短網址服務 (Short URL Service)
 
-## 1\. 核心技術選型與容器化部署
+這是一個基於 Docker 容器化的全端短網址系統。它提供了一個簡單的介面來縮短網址，並包含一個管理後台來查看和管理已建立的短網址。
 
-本服務採用標準的 Web 應用程式堆疊，並透過 Docker 進行環境管理。
+## ✨ 功能特色
 
-### 1.1 技術選型
+- **短網址生成**：將長網址轉換為簡短的代碼。
+- **快速重定向**：高效的網址跳轉服務。
+- **管理後台**：提供圖形化介面管理所有短網址。
+- **身份驗證**：安全的登入機制保護管理功能。
+- **容器化部署**：使用 Docker Compose 一鍵啟動所有服務。
 
-|Type                 | Technology             | Description of Responsibility                 |
-|:--------------------|:-----------------------|:----------------------------------------------|
-|Frontend             | Vue, Vue Router, Bulma | Frontend presentation and routing management  |
-|Backend              | Express, Node.js       | API services and business logic processing    |
-|Database             | MySQL                  | Data storage and management                   |
-|Reverse Proxy Server | Nginx                  | Traffic management and routing forwarding     |
-|Containerization     | Docker, Docker Compose | Environment deployment and service management |
-|SSL/TLS              | Cloudflare, Certbot    | Secure connection and certificate management  |
+## 🛠️ 技術棧
 
-### 1.2 Docker 服務部署
+- **前端 (Frontend)**: Vue.js 3, Vue Router, Bulma (CSS)
+- **後端 (Backend)**: Node.js, Express.js
+- **資料庫 (Database)**: MySQL 5.7
+- **反向代理 (Reverse Proxy)**: Nginx
 
-| Service       | Docker Image        | Port Mapping   |
-|:--------------|:--------------------|:---------------|
-| Database      | mysql:5.7           | Internal:3306  |
-| Backend API   | custom-node-express | Internal:3000  |
-| Frontend      | custom-vue-app      | Internal:80    |
-| Reverse Proxy | nginx:latest        | 443:443, 80:80 |
+## 🚀 快速開始
 
-https -> nignx(host) -> nginx(container) -> [ express(container) | vue(container) ] \
-使用兩層 nginx 作為反向代理，第一層處理 SSL/TLS 終端，第二層負責內部流量轉發至後端服務。
+### 前置需求
 
------
+確保您的系統已安裝以下工具：
+- [Docker](https://www.docker.com/get-started)
+- [Docker Compose](https://docs.docker.com/compose/install/)
 
-## 2\. 網址結構與頁面路由定義
+### 安裝與執行
 
-服務統一使用 `s.domain.com` 網域提供，區分為重定向、儀表板管理及 API 三大路徑。
+1. **啟動服務**
 
-### 2.1 網址結構定義
+   在專案根目錄下執行以下指令：
 
-| Path                      | Description           |
-|:--------------------------|:----------------------|
-| `s.domain.com/`           | Landing Page          |
-| `s.domain.com/*****`      | Short URL Redirection |
-| `s.domain.com/login`      | Dashboard Login Page  |
-| `s.domain.com/manage`     | Dashboard Page        |
-| `s.domain.com/api/v1/...` | API Endpoints         |
+   ```bash
+   docker compose up --build
+   ```
 
-### 2.2 視覺頁面架構
+2. **訪問服務**
 
-| Page Type       | Domain         | Path      | Description               |
-|:----------------|:---------------|:----------|:--------------------------|
-| Landing page    | `s.domain.com` | `/`       | Main service landing page |
-| Dashboard       | `s.domain.com` | `/manage` | Admin dashboard           |
-| Dashboard Login | `s.domain.com` | `/login`  | Admin login page          |
+   服務啟動後，您可以透過瀏覽器訪問：
 
------
+   - **首頁 (Landing Page)**: [http://localhost](http://localhost)
+   - **管理後台 (Dashboard)**: [http://localhost/manage](http://localhost/manage)
+   - **登入頁面 (Login)**: [http://localhost/login](http://localhost/login)
 
-## 3\. API 服務架構
+### 預設管理員帳號
 
-所有後端服務透過 `/api/v1/` 路徑提供，並區分是否需要身份驗證。
+| 欄位 | 值 |
+|:---|:---|
+| 帳號 (Username) | `admin` |
+| 密碼 (Password) | `password` |
 
-### 3.1 API 端點定義
+## 🔌 API 文件
 
-| Endpoint                      | Method   | Description        | Authentication |
-|:------------------------------|:--------:|:-------------------|:---------------|
-| `/api/v1/urls`                | `POST`   | Create short URL   | `false`        |
-| `/api/v1/login`               | `POST`   | management login   | `false`        |
-| `/api/v1/urls`                | `GET`    | Get all short URLs | `true`         |
-| `/api/v1/urls/:shortCode`     | `DELETE` | Delete short URL   | `true`         |
+所有 API 請求路徑皆以 `/api/v1` 開頭。
 
------
+| 方法 | 端點 | 描述 | 需要驗證 |
+|:---:|:---|:---|:---:|
+| `POST` | `/urls` | 建立新的短網址 | ❌ |
+| `POST` | `/login` | 管理員登入 | ❌ |
+| `GET` | `/urls` | 取得所有短網址列表 | ✅ |
+| `DELETE` | `/urls/:shortCode` | 刪除指定短網址 | ✅ |
 
-### 資料表
+## 📂 專案結構
 
-| Column Name      | Data Type     | Attributes                | Description         |
-|:-----------------|:--------------|:--------------------------|:--------------------|
-| `id`             | INT           | PK, AI, NOT NULL          | Unique identifier   |
-| `shortCode`      | VARCHAR(10)   | UNIQUE, NOT NULL, INDEX   | The short code      |
-| `fullUrl`        | VARCHAR(2048) | NOT NULL                  | The original URL    |
-| `createdAt`      | DATETIME      | DEFAULT CURRENT_TIMESTAMP | Creation time       |
+```
+.
+├── backend/            # Express 後端程式碼
+├── database/           # 資料庫初始化腳本
+├── frontend/           # Vue 前端程式碼
+├── nginx/              # Nginx 設定檔
+├── docker-compose.yml  # Docker 服務編排
+└── README.md           # 專案說明文件
+```
 
-Example Data:
+## 📝 開發說明
 
-| id | shortCode      | fullUrl                    | createdAt           |
-|----|----------------|----------------------------|---------------------|
-| 1  | abc123         | `https://www.example.com/` | 2024-01-01 12:00:00 |
-| 2  | xyz789         | `https://www.google.com/`  | 2024-01-02 13:30:00 |
+本專案使用 Nginx 作為反向代理，將流量分發至前端與後端容器：
 
-
------
-
-### Router 分配
-
-| Router     | Responsibility (Traffic/Logic)              | Example Path Handled      | Action                                                                                                 |
-|:----------:|:--------------------------------------------|:--------------------------|:-------------------------------------------------------------------------------------------------------|
-| Nginx      | Reverse Proxy / Traffic Steering            | `s.domain.com/*****`      | Forwards the request to Express to handle the **Redirection** logic.                                   |
-|            |                                             | `s.domain.com/api/v1/...` | Forwards the request to Express to handle **API Services**.                                            |
-|            |                                             | `s.domain.com/login`      | Forwards the request to the Frontend Container, to be handled by Vue Router.                           |
-| Express    | Backend Business Routing / API Services     | `POST /api/v1/urls`       | Processes the short URL creation request, **writes to MySQL**, and returns the short code.             |
-|            |                                             | `GET /****`               | Queries MySQL for the full URL based on the short code, then issues an **HTTP 302 Redirect** response. |
-| Vue Router | Frontend Page Routing / Component Switching | `/manage`                 | Renders the `<DashboardPage>` component.                                                               |
-|            |                                             | `/login`                  | Renders the `<LoginPage>` component.                                                                   |
-|            |                                             | `/`                       | Renders the `<LandingPage>` component.                                                                 |
-
-<!--
-| Router     | 職責 (Traffic/Logic)     | 處理的 Path 範例           | 動作 (Action)                                                     |
-|:-----------|:-------------------------|:--------------------------|:-----------------------------------------------------------------|
-| Nginx      | **反向代理/流量導向**     | `s.domain.com/*****`      | 將請求導向 Express 處理 **重定向** 邏輯。                           |
-|            |                          | `s.domain.com/api/v1/...` | 將請求導向 Express 處理 **API 服務**。                             |
-|            |                          | `s.domain.com/login`      | 將請求導向 Frontend Container, 由 Vue Router 接管。                |
-| Express    | **後端業務路由/API 服務** | `POST /api/v1/create`     | 處理短網址建立請求，**寫入 MySQL**，回傳短碼。                       |
-|            |                          | `GET /****`               | 根據短碼查詢 MySQL 取得完整 URL, 然後發出 **HTTP 302 重定向** 響應。 |
-| Vue Router | **前端頁面路由/元件切換**  | `/manage`                 | 渲染 `<DashboardPage>` 元件。                                     |
-|            |                          | `/login`                  | 渲染 `<LoginPage>` 元件。                                         |
-|            |                          | `/`                       | 渲染 `<LandingPage>` 元件。                                       |
--->
+- `http://localhost/api/*` -> 轉發至 Backend (Express)
+- `http://localhost/manage` -> 轉發至 Frontend (Vue)
+- `http://localhost/login` -> 轉發至 Frontend (Vue)
+- `http://localhost/{shortCode}` -> 轉發至 Backend (Express) 進行重定向
+- `http://localhost/` -> 轉發至 Frontend (Vue)

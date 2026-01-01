@@ -1,148 +1,246 @@
 <template>
-  <div class="home">
-    <div class="container">
-      <h1>Short URL Generator</h1>
-      <form @submit.prevent="submitForm" class="url-form">
+  <div class="home-container">
+    <div class="card">
+      <div class="card-header">
+        <h2>Short URL Generator</h2>
+      </div>
+      <form @submit.prevent="submitForm" class="form">
         <div class="form-group">
-          <label for="fullUrl">Long URL:</label>
-          <input type="url" id="fullUrl" v-model="form.fullUrl" placeholder="https://example.com/very/long/url"
-            required />
+          <label>Long URL</label>
+          <div class="input-group">
+            <span class="input-prefix"><i class="fas fa-link"></i></span>
+            <input v-model="form.fullUrl" placeholder="https://example.com/very/long/url" type="url" required />
+          </div>
         </div>
-
         <div class="form-group">
-          <label for="shortCode">Custom Short Code (Optional):</label>
-          <input type="text" id="shortCode" v-model="form.shortCode" placeholder="custom-code" pattern="[A-Za-z0-9]+"
-            title="Alphanumeric characters only" />
+          <label>Custom Code</label>
+          <div class="input-group">
+            <span class="input-prefix"><i class="fas fa-tag"></i></span>
+            <input v-model="form.shortCode" placeholder="Optional custom code" />
+          </div>
         </div>
-
-        <button type="submit" :disabled="loading">
-          {{ loading ? 'Creating...' : 'Shorten URL' }}
-        </button>
+        <div class="form-group">
+          <button type="submit" class="btn btn-primary" :disabled="loading">
+            <i class="fas fa-compress-arrows-alt" style="margin-right: 5px"></i>
+            {{ loading ? 'Shortening...' : 'Shorten URL' }}
+          </button>
+        </div>
       </form>
 
-      <div v-if="result" class="result success">
-        <p>Short URL created successfully!</p>
-        <a :href="result" target="_blank">{{ result }}</a>
+      <div v-if="result" class="alert alert-success">
+        <div class="alert-icon"><i class="fas fa-check-circle"></i></div>
+        <div class="alert-content">
+          <span>Your short URL: </span>
+          <a :href="result" target="_blank" class="link">{{ result }}</a>
+          <button class="btn btn-sm" @click="copyToClipboard">
+            <i class="fas fa-copy" style="margin-right: 5px"></i> Copy
+          </button>
+        </div>
       </div>
 
-      <div v-if="error" class="result error">
-        <p>Error: {{ error }}</p>
+      <div v-if="error" class="alert alert-error">
+        <div class="alert-icon"><i class="fas fa-exclamation-circle"></i></div>
+        <div class="alert-content">{{ error }}</div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue';
+import { reactive, ref } from 'vue'
+import axios from 'axios'
 
 const form = reactive({
   fullUrl: '',
   shortCode: ''
-});
+})
 
-const loading = ref(false);
-const result = ref(null);
-const error = ref(null);
+const loading = ref(false)
+const result = ref('')
+const error = ref('')
 
 const submitForm = async () => {
-  loading.value = true;
-  result.value = null;
-  error.value = null;
+  if (!form.fullUrl) {
+    alert('Please enter a URL')
+    return
+  }
+
+  loading.value = true
+  result.value = ''
+  error.value = ''
 
   try {
-    const response = await fetch('/api/v1/urls', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        fullUrl: form.fullUrl,
-        shortCode: form.shortCode || undefined
-      })
-    });
-
-    const responseData = await response.json();
-
-    if (!responseData.success) {
-      throw new Error(responseData.message || 'Something went wrong');
+    const response = await axios.post('/api/v1/urls', form)
+    if (response.data.success) {
+      const shortCode = response.data.data.shortCode
+      result.value = `${window.location.origin}/${shortCode}`
     }
-
-    const { shortCode } = responseData.data;
-    if (shortCode) {
-      result.value = `${window.location.origin}/${shortCode}`;
-    } else {
-      result.value = JSON.stringify(responseData.data);
-    }
-
   } catch (err) {
-    error.value = err.message;
+    console.error(err)
+    error.value = err.response?.data?.message || 'An error occurred'
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
+
+const copyToClipboard = async () => {
+  try {
+    await navigator.clipboard.writeText(result.value)
+    alert('Copied to clipboard')
+  } catch (err) {
+    alert('Failed to copy')
+  }
+}
 </script>
 
 <style scoped>
-.container {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 20px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+.home-container {
+  display: flex;
+  justify-content: center;
+  padding-top: 50px;
 }
 
-.url-form {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+.card {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  width: 600px;
+  max-width: 90%;
+  padding: 20px;
+}
+
+.card-header {
+  text-align: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #ebeef5;
+  padding-bottom: 10px;
+}
+
+.card-header h2 {
+  margin: 0;
+  color: #303133;
 }
 
 .form-group {
-  display: flex;
-  flex-direction: column;
-  text-align: left;
+  margin-bottom: 20px;
 }
 
-label {
-  margin-bottom: 5px;
-  font-weight: bold;
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: #606266;
+  font-weight: 500;
+}
+
+.input-group {
+  display: flex;
+  align-items: center;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.input-group:focus-within {
+  border-color: #409eff;
+}
+
+.input-prefix {
+  padding: 0 10px;
+  color: #909399;
+  background: #f5f7fa;
+  border-right: 1px solid #dcdfe6;
+  height: 40px;
+  display: flex;
+  align-items: center;
 }
 
 input {
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 16px;
-}
-
-button {
-  padding: 10px;
-  background-color: #42b983;
-  color: white;
+  flex: 1;
   border: none;
-  border-radius: 4px;
-  font-size: 16px;
-  cursor: pointer;
+  height: 38px;
+  padding: 0 10px;
+  outline: none;
+  color: #606266;
 }
 
-button:disabled {
-  background-color: #a0dca0;
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  border: 1px solid transparent;
+  transition: all 0.3s;
+}
+
+.btn-primary {
+  background-color: #409eff;
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background-color: #66b1ff;
+}
+
+.btn-primary:disabled {
+  background-color: #a0cfff;
   cursor: not-allowed;
 }
 
-.result {
-  margin-top: 20px;
-  padding: 15px;
+.btn-sm {
+  padding: 5px 10px;
+  font-size: 12px;
+  background-color: #fff;
+  border: 1px solid #dcdfe6;
+  color: #606266;
+}
+
+.btn-sm:hover {
+  color: #409eff;
+  border-color: #c6e2ff;
+  background-color: #ecf5ff;
+}
+
+.alert {
+  padding: 10px 15px;
   border-radius: 4px;
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
 }
 
-.success {
-  background-color: #dff0d8;
-  color: #3c763d;
+.alert-success {
+  background-color: #f0f9eb;
+  color: #67c23a;
 }
 
-.error {
-  background-color: #f2dede;
-  color: #a94442;
+.alert-error {
+  background-color: #fef0f0;
+  color: #f56c6c;
+}
+
+.alert-icon {
+  margin-right: 10px;
+  font-size: 1.2rem;
+}
+
+.alert-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.link {
+  color: #409eff;
+  text-decoration: none;
+  margin: 0 10px;
+}
+
+.link:hover {
+  text-decoration: underline;
 }
 </style>

@@ -2,9 +2,12 @@ const express = require('express');
 const { body } = require('express-validator');
 const { errorResponse } = require('../utils/responseHandler');
 const urlController = require('../controllers/urlController');
+const authController = require('../controllers/authController');
 const authenticate = require('../middleware/auth');
 
 const router = express.Router();
+
+router.post('/v1/login', authController.login);
 
 router.post('/v1/urls', [
     body('fullUrl').isURL().isLength({ max: 2048 }),

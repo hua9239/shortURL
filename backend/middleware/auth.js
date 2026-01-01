@@ -1,11 +1,22 @@
+const jwt = require('jsonwebtoken');
+const config = require('../config/config');
 const { errorResponse } = require('../utils/responseHandler');
 
 const authenticate = (req, res, next) => {
-    const auth = true; // Replace with real authentication logic
-    if (auth) {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return errorResponse(res, 'Unauthorized: No token provided', 401);
+    }
+
+    const token = authHeader.split(' ')[1];
+
+    try {
+        const decoded = jwt.verify(token, config.jwtSecret);
+        req.user = decoded;
         next();
-    } else {
-        errorResponse(res, 'Unauthorized', 401);
+    } catch (error) {
+        return errorResponse(res, 'Unauthorized: Invalid token', 401);
     }
 };
 
