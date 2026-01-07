@@ -67,7 +67,7 @@
 ```
 .
 ├── backend/            # Express 後端程式碼
-├── database/           # 資料庫初始化腳本
+├── database/           # MySQL 持久化資料夾
 ├── frontend/           # Vue 前端程式碼
 ├── nginx/              # Nginx 設定檔
 ├── docker-compose.yml  # Docker 服務編排

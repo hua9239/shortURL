@@ -3,34 +3,35 @@ services:
     image: mysql:5.7
     container_name: shorturl-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: p@ssword
+      MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: shorturl_db
     volumes:
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./database/sql_data:/var/lib/mysql
-      # ports:
-      # - "3306:3306"
 
   express:
     build: ./backend
     container_name: shorturl-express
     environment:
+      PORT: 3000
       DB_HOST: mysql
       DB_USER: root
-      DB_PASSWORD: p@ssword
+      DB_PASSWORD: password
       DB_NAME: shorturl_db
+      JWT_SECRET: jwt_secret_key
+      JWT_EXPIRES_IN: 1h
+      ADMIN_USER: admin
+      ADMIN_PASSWORD: password
     depends_on:
       - mysql
-    # ports:
-    #   - "3000:3000"
 
   vue-app:
     build: ./frontend
     container_name: shorturl-vue
+    environment:
+      VUE_APP_API_TARGET: http://express:3000
     depends_on:
       - express
-    # ports:
-    #   - "80:80"
 
   nginx:
     image: nginx:latest
