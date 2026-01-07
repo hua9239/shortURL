@@ -36,6 +36,9 @@
               </td>
               <td>{{ formatDate(url.createdAt) }}</td>
               <td>
+                <button class="btn btn-primary btn-sm" style="margin-right: 5px" @click="openEditModal(url)">
+                  <i class="fas fa-edit"></i> Edit
+                </button>
                 <button class="btn btn-danger btn-sm" @click="confirmDelete(url.shortCode)">
                   <i class="fas fa-trash-alt"></i> Delete
                 </button>
@@ -43,6 +46,32 @@
             </tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div v-if="showEditModal" class="modal-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>Edit URL</h3>
+          <button class="close-btn" @click="closeEditModal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Short Code</label>
+            <input v-model="editForm.shortCode" type="text" class="form-control" placeholder="Short Code">
+          </div>
+          <div class="form-group">
+            <label>Full URL</label>
+            <input v-model="editForm.fullUrl" type="text" class="form-control" placeholder="Full URL">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" @click="closeEditModal">Cancel</button>
+          <button class="btn btn-primary" @click="updateUrl" :disabled="updating">
+            {{ updating ? 'Updating...' : 'Save' }}
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -54,6 +83,13 @@ import axios from 'axios'
 
 const urls = ref([])
 const loading = ref(false)
+const showEditModal = ref(false)
+const updating = ref(false)
+const editForm = ref({
+  id: null,
+  shortCode: '',
+  fullUrl: ''
+})
 
 const fetchUrls = async () => {
   loading.value = true
@@ -91,6 +127,49 @@ const deleteUrl = async (shortCode) => {
   } catch (err) {
     console.error(err)
     alert('Failed to delete')
+  }
+}
+
+const openEditModal = (url) => {
+  editForm.value = {
+    id: url.id,
+    shortCode: url.shortCode,
+    fullUrl: url.fullUrl
+  }
+  showEditModal.value = true
+}
+
+const closeEditModal = () => {
+  showEditModal.value = false
+  editForm.value = { id: null, shortCode: '', fullUrl: '' }
+}
+
+const updateUrl = async () => {
+  if (!editForm.value.shortCode || !editForm.value.fullUrl) {
+    alert('Please fill all fields')
+    return
+  }
+  
+  updating.value = true
+  try {
+    const token = localStorage.getItem('token')
+    const response = await axios.put(`/api/v1/urls/${editForm.value.id}`, {
+      shortCode: editForm.value.shortCode,
+      fullUrl: editForm.value.fullUrl
+    }, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    
+    if (response.data.success) {
+      alert('Updated successfully')
+      closeEditModal()
+      fetchUrls()
+    }
+  } catch (err) {
+    console.error(err)
+    alert(err.response?.data?.message || 'Failed to update')
+  } finally {
+    updating.value = false
   }
 }
 
@@ -212,5 +291,108 @@ onMounted(() => {
 .btn-sm {
   padding: 5px 10px;
   font-size: 12px;
+}
+
+.btn-secondary {
+  background-color: #909399;
+  color: #fff;
+  margin-right: 10px;
+}
+
+.btn-secondary:hover {
+  background-color: #a6a9ad;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 8px;
+  width: 500px;
+  max-width: 90%;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-header {
+  padding: 15px 20px;
+  border-bottom: 1px solid #ebeef5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #303133;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #909399;
+}
+
+.close-btn:hover {
+  color: #606266;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #ebeef5;
+  text-align: right;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  color: #606266;
+}
+
+.form-control {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  box-sizing: border-box; /* Fix input width overflow */
+  transition: border-color 0.2s;
+}
+
+.form-control:focus {
+  border-color: #409eff;
+  outline: none;
 }
 </style>

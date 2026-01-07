@@ -9,5 +9,5 @@ CREATE INDEX idx_shortCode ON urls (shortCode);
 
 
 INSERT INTO urls (shortCode, fullUrl, createdAt) VALUES 
-('abc123', 'https://www.example.com/', '2024-01-01 12:00:00'),
-('xyz789', 'https://www.google.com/', '2024-01-02 13:30:00');
+('code1', 'https://www.example.com/', '2000-01-01 00:00:00'),
+('code2', 'https://www.google.com/', '2000-01-02 00:00:00');

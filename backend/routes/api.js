@@ -14,6 +14,12 @@ router.post('/v1/urls', [
     body('shortCode').optional({ values: 'falsy' }).isAlphanumeric().isLength({ max: 10 })
 ], urlController.createUrl);
 
+router.put('/v1/urls/:id', [
+    authenticate,
+    body('fullUrl').optional().isURL().isLength({ max: 2048 }),
+    body('shortCode').optional().isAlphanumeric().isLength({ max: 10 })
+], urlController.updateUrl);
+
 router.get('/v1/urls', authenticate, urlController.getUrls);
 
 router.delete('/v1/urls/:shortCode', authenticate, urlController.deleteUrl);
